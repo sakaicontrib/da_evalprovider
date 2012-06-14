@@ -1,0 +1,34 @@
+<?xml version="1.0"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0">
+  <modelVersion>4.0.0</modelVersion>
+  <parent>
+    <artifactId>evalgroup-base</artifactId>
+    <groupId>org.sakaiproject.evaluation</groupId>
+    <version>0.1-SNAPSHOT</version>
+    <relativePath>../pom.xml</relativePath>
+  </parent>
+  <name>sakai-evalgroup-providers-pack</name>
+  <groupId>org.sakaiproject.evaluation</groupId>
+  <artifactId>sakai-evalgroup-providers-pack</artifactId>
+  <organization>
+    <name>Sakai Foundation</name>
+    <url>http://sakaiproject.org/</url>
+  </organization>
+  <inceptionYear>2003</inceptionYear>
+  <packaging>sakai-component</packaging>
+  <properties>
+    <deploy.target>components</deploy.target>
+  </properties>
+  <dependencies>
+    <dependency>
+      <groupId>org.sakaiproject.evaluation</groupId>
+      <artifactId>sakai-evalgroup-providers-impl</artifactId>
+      <version>0.1-SNAPSHOT</version>
+    </dependency>
+  </dependencies>
+  <build>
+    <resources/>
+<!-- java source -->
+  </build>
+</project>
+
