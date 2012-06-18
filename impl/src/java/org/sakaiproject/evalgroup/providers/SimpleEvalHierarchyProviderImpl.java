@@ -303,7 +303,7 @@ public class SimpleEvalHierarchyProviderImpl extends HibernateGeneralGenericDao 
              m.put(nodeIds[i], 0);
         }
     
-        List<EvalGroupNodes> l = findBySearch(EvalGroupNodes.class, new Search("nodeId", nodeIds) );
+        List<EvalGroupNodes> l = getEvalGroupNodesByNodeId(nodeIds);
         for (Iterator<EvalGroupNodes> iter = l.iterator(); iter.hasNext();) {
             EvalGroupNodes egn = (EvalGroupNodes) iter.next();
             m.put(egn.getNodeId(), egn.getEvalGroups().length);
@@ -333,11 +333,21 @@ public class SimpleEvalHierarchyProviderImpl extends HibernateGeneralGenericDao 
     }
 
     private List<EvalGroupNodes> getEvalGroupNodesByNodeId(String[] nodeIds) {
-        List<EvalGroupNodes> l = findBySearch(EvalGroupNodes.class, new Search(
+        /* List<EvalGroupNodes> l = findBySearch(EvalGroupNodes.class, new Search(
                 new Restriction("nodeId", nodeIds),
                 new Order("id")
-        ) );
-        return l;
+        ) ); */
+       List<EvalGroupNodes> l = new ArrayList<EvalGroupNodes>();
+       for (String nodeId : nodeIds) {
+         List<String> childIds = new ArrayList<String>();
+         for (HierarchyNode child : hierarchyService.getChildNodes(nodeId, true)) {
+           if(child != null && child.title != null && child.title.startsWith("/site/")) {
+            childIds.add(child.id);
+           }
+         }
+         l.add(new EvalGroupNodes(null, nodeId, childIds.toArray(new String[childIds.size()])));
+       }
+       return l;
     }
 
     @SuppressWarnings("unchecked")
