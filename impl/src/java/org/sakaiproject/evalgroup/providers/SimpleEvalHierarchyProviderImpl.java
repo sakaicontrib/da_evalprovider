@@ -356,7 +356,7 @@ public class SimpleEvalHierarchyProviderImpl extends HibernateGeneralGenericDao 
          List<String> childIds = new ArrayList<String>();
          for (HierarchyNode child : hierarchyService.getChildNodes(nodeId, true)) {
            if(child != null && child.title != null && child.title.startsWith("/site/")) {
-            childIds.add(child.id);
+            childIds.add(child.title);
            }
          }
          l.add(new EvalGroupNodes(null, nodeId, childIds.toArray(new String[childIds.size()])));
