@@ -2,12 +2,7 @@ package org.sakaiproject.evalgroup.providers;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.hibernate.Hibernate;
-import org.hibernate.HibernateException;
-import org.hibernate.Query;
-import org.hibernate.Session;
 
-import java.sql.SQLException;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.Map;
@@ -39,7 +34,6 @@ import org.sakaiproject.site.api.Site;
 import org.sakaiproject.site.api.SiteService.SelectionType;
 import org.sakaiproject.site.api.SiteService.SortType;
 import org.sakaiproject.exception.IdUnusedException;
-import org.springframework.orm.hibernate3.HibernateCallback;
 
 
 
@@ -338,8 +332,13 @@ public class SimpleEvalHierarchyProviderImpl extends HibernateGeneralGenericDao 
         return egn;
     }
 
-    private List<EvalGroupNodes> getEvalGroupNodesByNodeId(final String[] nodeIds) {
-    	final String hql = "select egn from EvalGroupNodes egn where egn.nodeId in (:nodeIds)";
+    private List<EvalGroupNodes> getEvalGroupNodesByNodeId(String[] nodeIds) {
+        /* List<EvalGroupNodes> l = findBySearch(EvalGroupNodes.class, new Search(
+                new Restriction("nodeId", nodeIds),
+                new Order("id")
+        ) ); */
+    	/*
+    	 *     	final String hql = "select egn from EvalGroupNodes egn where egn.nodeId in (:nodeIds)";
         Object[] params = new Object[] {nodeIds};
         HibernateCallback hcb = new HibernateCallback() {
 			
@@ -351,6 +350,18 @@ public class SimpleEvalHierarchyProviderImpl extends HibernateGeneralGenericDao 
 			}
 		};
 		return (List<EvalGroupNodes>) getHibernateTemplate().execute(hcb);
+    	 */
+       List<EvalGroupNodes> l = new ArrayList<EvalGroupNodes>();
+       for (String nodeId : nodeIds) {
+         List<String> childIds = new ArrayList<String>();
+         for (HierarchyNode child : hierarchyService.getChildNodes(nodeId, true)) {
+           if(child != null && child.title != null && child.title.startsWith("/site/")) {
+            childIds.add(child.id);
+           }
+         }
+         l.add(new EvalGroupNodes(null, nodeId, childIds.toArray(new String[childIds.size()])));
+       }
+       return l;
     }
 
     @SuppressWarnings("unchecked")
