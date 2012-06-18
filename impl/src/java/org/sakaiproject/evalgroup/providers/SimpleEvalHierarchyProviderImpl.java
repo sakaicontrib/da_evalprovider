@@ -154,7 +154,7 @@ public class SimpleEvalHierarchyProviderImpl extends HibernateGeneralGenericDao 
      Set<HierarchyNode> nodes = hierarchyService.getChildNodes(nodeId, directOnly);
      for (HierarchyNode node : nodes) {
          EvalHierarchyNode eNode = makeEvalNode(node);
-         if (eNode != null) {
+         if (eNode != null && (node.title == null || !node.title.startsWith("/site/"))) {
              eNodes.add( eNode );
          }
      }
