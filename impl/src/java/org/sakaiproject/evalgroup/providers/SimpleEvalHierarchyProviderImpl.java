@@ -2,7 +2,11 @@ package org.sakaiproject.evalgroup.providers;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.hibernate.HibernateException;
+import org.hibernate.SQLQuery;
+import org.hibernate.Session;
 
+import java.sql.SQLException;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.Map;
@@ -34,6 +38,7 @@ import org.sakaiproject.site.api.Site;
 import org.sakaiproject.site.api.SiteService.SelectionType;
 import org.sakaiproject.site.api.SiteService.SortType;
 import org.sakaiproject.exception.IdUnusedException;
+import org.springframework.orm.hibernate3.HibernateCallback;
 
 
 
@@ -365,14 +370,32 @@ public class SimpleEvalHierarchyProviderImpl extends HibernateGeneralGenericDao 
     }
 
     @SuppressWarnings("unchecked")
-    public String getNodeIdForEvalGroup(String evalGroupId) {
-        String hql = "select egn.nodeId from EvalGroupNodes egn join egn.evalGroups egrps where egrps.id = ? order by egn.nodeId";
-        String[] params = new String[] {evalGroupId};
-        List<String> l = getHibernateTemplate().find(hql, params);
-        if (l.isEmpty()) {
-             return null;
-        }
-        return (String) l.get(0);
+    public String getNodeIdForEvalGroup(final String evalGroupId) {
+    	if(evalGroupId.startsWith("/site/")){
+    		final String sql = "Select ID From HIERARCHY_NODE_META where hierarchyId = ? and title = ? and isDisabled = 0";
+    		List<Object> l = (List) getHibernateTemplate().execute(new HibernateCallback() {
+				
+				public Object doInHibernate(Session session) throws HibernateException,
+						SQLException {
+					SQLQuery sq =session.createSQLQuery(sql);
+					sq.setParameter(0, "delegatedAccessHierarchyId");
+					sq.setParameter(1, evalGroupId);
+					return sq.list();
+				}
+			});
+    		if (l.isEmpty()) {
+    			return null;
+    		}
+    		return l.get(0).toString();
+    	}else{
+    		String hql = "select egn.nodeId from EvalGroupNodes egn join egn.evalGroups egrps where egrps.id = ? order by egn.nodeId";
+    		String[] params = new String[] {evalGroupId};
+    		List<String> l = getHibernateTemplate().find(hql, params);
+    		if (l.isEmpty()) {
+    			return null;
+    		}
+    		return (String) l.get(0);
+    	}
     }
 
 
