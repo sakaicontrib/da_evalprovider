@@ -279,12 +279,16 @@ public class SimpleEvalHierarchyProviderImpl extends HibernateGeneralGenericDao 
     * @return a Map of nodeId -> a set of eval group ids representing the eval groups beneath that node
     */
    public Map<String, Set<String>> getEvalGroupsForNodes(String[] nodeIds) {
+	   return getEvalGroupsForNodes(nodeIds, -1, null);
+   }
+   
+   public Map<String, Set<String>> getEvalGroupsForNodes(String[] nodeIds, int filterLevel, String filter) {
         if (nodeIds == null) {
             throw new IllegalArgumentException("nodeIds cannot be null");
         }
         Map<String, Set<String>> m = new HashMap<String, Set<String>>();
         if (nodeIds.length > 0) {
-             List<EvalGroupNodes> l = getEvalGroupNodesByNodeId(nodeIds);
+             List<EvalGroupNodes> l = getEvalGroupNodesByNodeId(nodeIds, filterLevel, filter);
              for (EvalGroupNodes egn : l) {
                  Set<String> s = new HashSet<String>();
                  String[] evalGroups = egn.getEvalGroups();
@@ -308,7 +312,7 @@ public class SimpleEvalHierarchyProviderImpl extends HibernateGeneralGenericDao 
              m.put(nodeIds[i], 0);
         }
     
-        List<EvalGroupNodes> l = getEvalGroupNodesByNodeId(nodeIds);
+        List<EvalGroupNodes> l = getEvalGroupNodesByNodeId(nodeIds, -1, null);
         for (Iterator<EvalGroupNodes> iter = l.iterator(); iter.hasNext();) {
             EvalGroupNodes egn = (EvalGroupNodes) iter.next();
             m.put(egn.getNodeId(), egn.getEvalGroups().length);
@@ -329,7 +333,7 @@ public class SimpleEvalHierarchyProviderImpl extends HibernateGeneralGenericDao 
     }
 
     private EvalGroupNodes getEvalGroupNodeByNodeId(String nodeId) {
-        List<EvalGroupNodes> l = getEvalGroupNodesByNodeId(new String[] {nodeId});
+        List<EvalGroupNodes> l = getEvalGroupNodesByNodeId(new String[] {nodeId}, -1, null);
         EvalGroupNodes egn = null;
         if (!l.isEmpty()) {
             egn = (EvalGroupNodes) l.get(0);
@@ -337,7 +341,7 @@ public class SimpleEvalHierarchyProviderImpl extends HibernateGeneralGenericDao 
         return egn;
     }
 
-    private List<EvalGroupNodes> getEvalGroupNodesByNodeId(String[] nodeIds) {
+    private List<EvalGroupNodes> getEvalGroupNodesByNodeId(String[] nodeIds, int filterLevel, String filter) {
         /* List<EvalGroupNodes> l = findBySearch(EvalGroupNodes.class, new Search(
                 new Restriction("nodeId", nodeIds),
                 new Order("id")
@@ -359,9 +363,62 @@ public class SimpleEvalHierarchyProviderImpl extends HibernateGeneralGenericDao 
        List<EvalGroupNodes> l = new ArrayList<EvalGroupNodes>();
        for (String nodeId : nodeIds) {
          List<String> childIds = new ArrayList<String>();
+         Map<String, HierarchyNode> nodeCache = new HashMap<String, HierarchyNode>();
          for (HierarchyNode child : hierarchyService.getChildNodes(nodeId, true)) {
            if(child != null && child.title != null && child.title.startsWith("/site/")) {
-            childIds.add(child.title);
+        	   //filter nodes based on filter
+        	   if(filterLevel > -1 && filter != null && !"".equals(filter)){
+        		   int nodeLevel = child.parentNodeIds.size();
+        		   String title = null;
+        		   if(nodeLevel == filterLevel){
+        			   //this node is on the same level as the filter, check it's title against the filter
+        			   title = child.description;
+        		   }else if(nodeLevel > filterLevel){
+        			   //this node is below the filter level, we need to find it's parent at the filter 
+        			   //level and check it's title against the filter
+        			   Set<String> parentNodeIds = new HashSet<String>();
+        			   //first try to get the parents from the cache
+        			   for(String parent : child.parentNodeIds){
+        				   if(nodeCache.containsKey(parent)){
+        					   nodeLevel = nodeCache.get(parent).parentNodeIds.size();
+        					   if(nodeLevel == filterLevel){
+        						   //we found the one we wanted in the cache, break out and
+        						   title = nodeCache.get(parent).title;
+        						   break;
+        					   }
+        					   //else ignore, b/c it's not the right level anyways
+        				   }else{
+        					   //we'll look this up later in bulk
+        					   parentNodeIds.add(parent);
+        				   }
+        			   }
+        			   if(title == null){
+        				   //title is still null, whihc means we didn't find it in the cache
+        				   //lookup parents:
+        				   Map<String, HierarchyNode> parentNodes = hierarchyService.getNodesByIds(parentNodeIds.toArray(new String[]{}));
+        				   for(HierarchyNode nParent : parentNodes.values()){
+        					   nodeLevel = nParent.parentNodeIds.size();
+        					   if(nodeLevel == filterLevel){
+        						   //we found the one we wanted, save the title
+        						   title = nParent.title;
+        					   }
+        					   //save this in the cache so we don't have to look it up again
+        					   nodeCache.put(nParent.id, nParent);
+        				   }
+        			   }	
+        		   }
+        		   //ok, we should have the correct title for the correct node level for this node (or parent)
+        		   //unless the node was above the filter... then we'll deal with that when we get the node's
+        		   //children
+        		   if(title != null && title.toLowerCase().equals(filter.toLowerCase())){
+        			   //this node didn't match the filter, remove it
+        			   childIds.add(child.title);
+        		   }
+
+               }else{
+            	   //no filter, just add the child
+            	   childIds.add(child.title);
+               }
            }
          }
          l.add(new EvalGroupNodes(null, nodeId, childIds.toArray(new String[childIds.size()])));
