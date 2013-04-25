@@ -242,6 +242,17 @@ public class SimpleEvalHierarchyProviderImpl extends HibernateGeneralGenericDao 
          }
          return l;
    }
+   
+   public EvalHierarchyNode getNodeForEvalGroup(String evalGroupId){
+       String nodeId = getNodeIdForEvalGroup(evalGroupId);
+       if (nodeId != null) {
+            HierarchyNode n =  hierarchyService.getNodeById(nodeId);
+            if(n != null){
+            	return makeEvalNode(n);
+            }
+       }
+        return null;
+   }
 
    /**
     * Get the set of eval group ids beneath a specific hierarchy node, note that this should only
