@@ -26,12 +26,12 @@
         <dependency>
             <groupId>org.sakaiproject.evaluation</groupId>
             <artifactId>sakai-evaluation-api</artifactId>
-            <version>1.4-SNAPSHOT</version>
+            <version>10-SNAPSHOT</version>
         </dependency>
         <dependency>
             <groupId>org.sakaiproject.evaluation</groupId>
              <artifactId>sakai-evaluation-impl</artifactId>
-             <version>1.4-SNAPSHOT</version>
+             <version>10-SNAPSHOT</version>
         </dependency>
         <dependency>
             <groupId>org.sakaiproject.hierarchy</groupId>
@@ -44,21 +44,27 @@
              <version>1.1.0-beta04</version>
         </dependency>
 
- <dependency>
+        <dependency>
              <groupId>org.sakaiproject</groupId>
-                         <artifactId>generic-dao</artifactId>
-                                 </dependency>
+             <artifactId>generic-dao</artifactId>
+             <version>${generic-dao.version}</version>
+        </dependency>
 
         <!-- Spring and Hibernate dependencies. -->
         <dependency>
             <groupId>org.springframework</groupId>
-            <artifactId>spring</artifactId>
+            <artifactId>spring-core</artifactId>
         </dependency>
 
         <dependency>
-                            <groupId>org.hibernate</groupId>
-                                                            <artifactId>hibernate</artifactId>
-                                                                                                    </dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-orm</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.hibernate</groupId>
+            <artifactId>hibernate-core</artifactId>
+        </dependency>
 
 
         <!-- Apache commons dependencies -->
