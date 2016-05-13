@@ -458,7 +458,7 @@ public class SimpleEvalHierarchyProviderImpl extends HibernateGeneralGenericDao 
     	}else{
     		String hql = "select egn.nodeId from EvalGroupNodes egn join egn.evalGroups egrps where egrps.id = ? order by egn.nodeId";
     		String[] params = new String[] {evalGroupId};
-    		List<String> l = getHibernateTemplate().find(hql, params);
+    		List<String> l = (List<String>) getHibernateTemplate().find(hql, (Object[]) params);
     		if (l.isEmpty()) {
     			return null;
     		}
