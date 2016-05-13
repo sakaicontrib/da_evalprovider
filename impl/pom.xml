@@ -6,12 +6,12 @@
     <parent>
         <artifactId>evalgroup-base</artifactId>
         <groupId>org.sakaiproject.evaluation</groupId>
-        <version>0.1-SNAPSHOT</version><!--eval.version-->
+        <version>11-SNAPSHOT</version><!--eval.version-->
     </parent>
     <name>Sakai Evaluation Provider Impl</name>
     <groupId>org.sakaiproject.evaluation</groupId>
     <artifactId>sakai-evalgroup-providers-impl</artifactId>
-    <version>0.1-SNAPSHOT</version><!--eval.version-->
+    <version>11-SNAPSHOT</version><!--eval.version-->
     <organization>
         <name>Sakai Project</name>
         <url>http://www.sakaiproject.org/</url>
@@ -26,12 +26,12 @@
         <dependency>
             <groupId>org.sakaiproject.evaluation</groupId>
             <artifactId>sakai-evaluation-api</artifactId>
-            <version>10-SNAPSHOT</version>
+            <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>org.sakaiproject.evaluation</groupId>
              <artifactId>sakai-evaluation-impl</artifactId>
-             <version>10-SNAPSHOT</version>
+             <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>org.sakaiproject.hierarchy</groupId>
@@ -41,13 +41,11 @@
         <dependency>
              <groupId>org.sakaiproject.kernel</groupId>
              <artifactId>sakai-kernel-api</artifactId>
-             <version>1.1.0-beta04</version>
         </dependency>
 
         <dependency>
-             <groupId>org.sakaiproject</groupId>
+             <groupId>org.sakaiproject.genericdao</groupId>
              <artifactId>generic-dao</artifactId>
-             <version>${generic-dao.version}</version>
         </dependency>
 
         <!-- Spring and Hibernate dependencies. -->

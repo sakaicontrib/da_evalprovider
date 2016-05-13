@@ -28,8 +28,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
-import java.util.Collection;
-import java.util.Iterator;
 import javax.sql.DataSource;
 import java.sql.Connection;
 import java.sql.Statement;
@@ -41,68 +39,50 @@ import org.sakaiproject.evaluation.constant.EvalConstants;
 import org.sakaiproject.evaluation.logic.externals.EvalExternalLogic;
 import org.sakaiproject.evaluation.logic.model.EvalGroup;
 import org.sakaiproject.evaluation.providers.EvalGroupsProvider;
-import org.sakaiproject.site.api.Site;
-import org.sakaiproject.site.api.SiteService.SelectionType;
-import org.sakaiproject.site.api.SiteService.SortType;
-import org.sakaiproject.javax.PagingPosition;
-import org.sakaiproject.site.api.SiteService;
-import org.sakaiproject.site.api.Group;
 
-
-/**
- * 
- *
- */
 public class SimpleEvalGroupProviderImpl implements EvalGroupsProvider 
 {
-	private static final Log log = LogFactory.getLog(SimpleEvalGroupProviderImpl.class);
-	
+	private static final Log LOG = LogFactory.getLog(SimpleEvalGroupProviderImpl.class);
+
 	protected EvalExternalLogic externalLogic;
 	public void setExternalLogic(EvalExternalLogic externalLogic) {
 		this.externalLogic = externalLogic;
 	}
 
-	protected static  String PERM_ASSIGN_EVALUATION_COPY;
+	private DataSource dataSource;
+	public void setDataSource(DataSource dataSource) {
+		this.dataSource = dataSource;
+	}
 
-	protected static  String PERM_TA_ROLE_COPY;
-	
-	private SiteService siteService;
-	
-	
-	
-    /**
-     * Initialize this provider
-     */
-    public void init() 
-    {
-    	log.info("init");
-    	try 
-    	{
+	protected static String PERM_ASSIGN_EVALUATION_COPY;
+	protected static String PERM_TA_ROLE_COPY;
+
+	/**
+	 * Initialize this provider
+	 */
+	public void init() 
+	{
+		LOG.info("init");
+		try 
+		{
 			Field field = SimpleEvalGroupProviderImpl.class.getField("PERM_ASSIGN_EVALUATION");
 			PERM_ASSIGN_EVALUATION_COPY = (String) field.get(this);
 		} 
-    	catch (Exception e)
-    	{
-    		PERM_ASSIGN_EVALUATION_COPY = "provider.assign.eval";
+		catch (NoSuchFieldException | SecurityException | IllegalArgumentException | IllegalAccessException e)
+		{
+			PERM_ASSIGN_EVALUATION_COPY = "provider.assign.eval";
 		} 
-    	try 
-    	{
+		try 
+		{
 			Field field = SimpleEvalGroupProviderImpl.class.getField("PERM_TA_ROLE");
 			PERM_TA_ROLE_COPY = (String) field.get(this);
 		} 
-    	catch (Exception e)
-    	{
-    		PERM_TA_ROLE_COPY = "provider.role.ta";
+		catch (NoSuchFieldException | SecurityException | IllegalArgumentException | IllegalAccessException e)
+		{
+			PERM_TA_ROLE_COPY = "provider.role.ta";
 		} 
-    }
+	}
 
-		private DataSource dataSource;
-		
-		public void setDataSource(DataSource dataSource) {
-			this.dataSource = dataSource;
-		}
-	
-	
 	/* (non-Javadoc)
 	 * @see org.sakaiproject.evaluation.providers.EvalGroupsProvider#countEvalGroupsForUser(java.lang.String, java.lang.String)
 	 */
@@ -120,8 +100,8 @@ public class SimpleEvalGroupProviderImpl implements EvalGroupsProvider
 			count = result.getInt("total");
 			conn.close();
 		} catch (SQLException ex) {
-			  System.err.println("SQLException: " + ex.getMessage());
-		} 
+			System.err.println("SQLException: " + ex.getMessage());
+		}
 		return count;
 	}
 
@@ -134,8 +114,8 @@ public class SimpleEvalGroupProviderImpl implements EvalGroupsProvider
 	}
 
 	public List<EvalGroup> getEvalGroupsForUser(String userId, String permission) {
-		List<EvalGroup> evalGroups = new ArrayList<EvalGroup>();
-		
+		List<EvalGroup> evalGroups = new ArrayList<>();
+
 		Connection conn;
 		try {
 				conn = dataSource.getConnection();
@@ -152,34 +132,11 @@ public class SimpleEvalGroupProviderImpl implements EvalGroupsProvider
 						evalGroups.add(this.makeEvalGroupObject(result.getString("id")));
 					}
 				}
-				conn.close();	
+				conn.close();
 		} catch (SQLException ex) {
 			System.err.println("SQLException: " + ex.getMessage());
-		} 
-		
-		
-		// Going to try to use this provider to get all groups
-		// authzGroupService.getAuthzGroups()
-		
-		/* siteService = org.sakaiproject.site.cover.SiteService.getInstance();
-		
-		List<Site> sites = siteService.getSites(SelectionType.ACCESS, null, null, null, SortType.NONE, new PagingPosition());
-		
-		log.info("sites"+sites);
-		
-		for (Site site : sites) {
-		    Collection<Group> coll = site.getGroups();
-		    log.info("collection is null!");
-		        
-		    Iterator iterator = coll.iterator();
-		    while(iterator.hasNext()) {
-		        log.info("groups"+iterator.next());
-		        evalGroups.add( (EvalGroup) iterator.next());
-		    }
 		}
-		
-		
-		return coll; */
+
 		return evalGroups;
 	}
 
@@ -187,7 +144,7 @@ public class SimpleEvalGroupProviderImpl implements EvalGroupsProvider
 	 * @see org.sakaiproject.evaluation.providers.EvalGroupsProvider#getEvalGroupsForUser(java.lang.String)
 	 */
 	public Map<String, List<EvalGroup>> getEvalGroupsForUser(String userId) {
-		Map<String, List<EvalGroup>> groups = new HashMap<String, List<EvalGroup>>();
+		Map<String, List<EvalGroup>> groups = new HashMap<>();
 		for(String permission : new String[]{PERM_TAKE_EVALUATION, PERM_BE_EVALUATED, PERM_ASSIGN_EVALUATION_COPY, PERM_TA_ROLE_COPY}) {
 			List<EvalGroup> list = this.getEvalGroupsForUser(userId, permission);
 			if(list != null && ! list.isEmpty()) {
@@ -210,19 +167,18 @@ public class SimpleEvalGroupProviderImpl implements EvalGroupsProvider
 			if(result != null) {
 				group = this.makeEvalGroupObject(groupId);
 			}
-			conn.close();	
+			conn.close();
 		} catch (SQLException ex) {
 			System.err.println("SQLException: " + ex.getMessage());
-		} 
+		}
 		return group;
 	}
 
 	/* (non-Javadoc)
 	 * @see org.sakaiproject.evaluation.providers.EvalGroupsProvider#getUserIdsForEvalGroups(java.lang.String[], java.lang.String)
 	 */
-	public Set<String> getUserIdsForEvalGroups(String[] groupIds,
-			String permission) {
-		Set<String> userIds = new TreeSet<String>();
+	public Set<String> getUserIdsForEvalGroups(String[] groupIds, String permission) {
+		Set<String> userIds = new TreeSet<>();
 		Connection conn;
 		try {
 			conn = dataSource.getConnection();
@@ -235,26 +191,18 @@ public class SimpleEvalGroupProviderImpl implements EvalGroupsProvider
 					}
 				}
 			}
-			conn.close();	
+			conn.close();
 		} catch (SQLException ex) {
 			System.err.println("SQLException: " + ex.getMessage());
-		} 
+		}
 		return userIds;
 	}
 
 	/* (non-Javadoc)
 	 * @see org.sakaiproject.evaluation.providers.EvalGroupsProvider#isUserAllowedInGroup(java.lang.String, java.lang.String, java.lang.String)
 	 */
-	public boolean isUserAllowedInGroup(String userId, String permission,
-			String groupId) {
+	public boolean isUserAllowedInGroup(String userId, String permission, String groupId) {
 		boolean isAllowed = false;
-		String userEid = this.getUserEid(userId);
-		
-		//Map<String,String> courseOfferingRoles = this.courseManagementService.findCourseOfferingRoles(userEid);
-		//if(courseOfferingRoles != null) {
-			//String role = courseOfferingRoles.get(groupId);
-			//isAllowed = role != null && mapsTo(permission, role, userId); 
-		//}
 		Connection conn;
 		try {
 			conn = dataSource.getConnection();
@@ -263,11 +211,11 @@ public class SimpleEvalGroupProviderImpl implements EvalGroupsProvider
 			if (result != null) {
 				isAllowed = true;
 			}
-			conn.close();	
+			conn.close();
 		} catch (SQLException ex) {
 			System.err.println("SQLException: " + ex.getMessage());
-		} 
-		
+		}
+
 		return isAllowed;
 	}
 
@@ -319,23 +267,21 @@ public class SimpleEvalGroupProviderImpl implements EvalGroupsProvider
 			conn.close();	
 		} catch (SQLException ex) {
 			System.err.println("SQLException: " + ex.getMessage());
-		} 
-		return new EvalGroup(groupId, title,
-				EvalConstants.GROUP_TYPE_PROVIDED);
+		}
+		return new EvalGroup(groupId, title, EvalConstants.GROUP_TYPE_PROVIDED);
 	}
 
 	/**
 	 * @param userId
 	 * @return
 	 */
-	protected String getUserEid(String userId) 
+	protected String getUserEid(String userId)
 	{
 		return this.externalLogic.getUserUsername(userId);
 	}
 	
-	protected String getUserId(String userEid) 
+	protected String getUserId(String userEid)
 	{
 		return this.externalLogic.getUserId(userEid);
 	}
-
 }
