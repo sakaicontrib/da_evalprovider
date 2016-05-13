@@ -9,42 +9,27 @@ import org.hibernate.Session;
 import java.sql.SQLException;
 import java.util.List;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Map;
-import java.util.LinkedHashMap;
 import java.util.Set;
-import java.util.TreeSet;
 import java.util.HashSet;
 import java.util.HashMap;
-import java.util.Iterator;
 
 import org.sakaiproject.evaluation.providers.EvalHierarchyProvider;
 import org.sakaiproject.evaluation.constant.EvalConstants;
 import org.sakaiproject.evaluation.logic.model.EvalHierarchyNode;
 import org.sakaiproject.evaluation.logic.externals.EvalExternalLogic;
 import org.sakaiproject.evaluation.model.EvalGroupNodes;
-import org.sakaiproject.evaluation.dao.EvaluationDao;
 import org.sakaiproject.genericdao.hibernate.HibernateGeneralGenericDao;
 
-import org.sakaiproject.evaluation.logic.externals.ExternalHierarchyLogic;
 import org.sakaiproject.hierarchy.HierarchyService;
 import org.sakaiproject.hierarchy.model.HierarchyNode;
 import org.sakaiproject.hierarchy.utils.HierarchyUtils;
-import org.sakaiproject.genericdao.api.search.Search;
-import org.sakaiproject.genericdao.api.search.Restriction;
-import org.sakaiproject.genericdao.api.search.Order;
-
-import org.sakaiproject.site.api.SiteService;
-import org.sakaiproject.site.api.Site;
-import org.sakaiproject.site.api.SiteService.SelectionType;
-import org.sakaiproject.site.api.SiteService.SortType;
-import org.sakaiproject.exception.IdUnusedException;
 import org.springframework.orm.hibernate3.HibernateCallback;
-
-
 
 public class SimpleEvalHierarchyProviderImpl extends HibernateGeneralGenericDao implements EvalHierarchyProvider {
 
-  private static final Log log = LogFactory.getLog(SimpleEvalHierarchyProviderImpl.class);
+  private static final Log LOG = LogFactory.getLog(SimpleEvalHierarchyProviderImpl.class);
 
   protected EvalExternalLogic externalLogic;
   public void setExternalLogic(EvalExternalLogic externalLogic) {
@@ -56,49 +41,24 @@ public class SimpleEvalHierarchyProviderImpl extends HibernateGeneralGenericDao 
     this.hierarchyService = hierarchyService;
   }
 
-  
+  protected static String PERM_ASSIGN_EVALUATION_COPY;
+  protected static String PERM_TA_ROLE_COPY;
 
-  protected static  String PERM_ASSIGN_EVALUATION_COPY;
-
-  protected static  String PERM_TA_ROLE_COPY;	
-	
-
-	
-	/**
+  /**
    * Initialize this provider
    */
   public void init() {
-    log.info("init");
-    
+    LOG.info("init");
   }
-  
-  
-	/**
+
+  /**
     * Get the hierarchy root node of the eval hierarchy
     * 
     * @return the {@link EvalHierarchyNode} representing the root of the hierarchy
     * @throws IllegalStateException if no node can be obtained
     */
   public EvalHierarchyNode getRootLevelNode() {
-	  /* EvalHierarchyNode rootNode = new EvalHierarchyNode();
-	  rootNode.title = "Root";
-	  rootNode.id = "1";
-	  Set<String> children = new TreeSet<String>();
-	  for (EvalHierarchyNode node1 : getChildNodes(rootNode.id, false)) {
-	  	children.add(node1.id);
-	  }
-	  
-	  rootNode.childNodeIds = children;
-	  
-	  Set<String> directChildren = new TreeSet<String>();
-	  for (EvalHierarchyNode node2 : getChildNodes(rootNode.id, true)) {
-	  	directChildren.add(node2.id);
-	  }
-	  
-	  rootNode.directChildNodeIds = directChildren;
-	  
-	  return rootNode; */
-          EvalHierarchyNode node = null;
+          EvalHierarchyNode node;
           HierarchyNode hNode = hierarchyService.getRootNode("delegatedAccessHierarchyId");
           node = makeEvalNode(hNode);
           return node;
@@ -111,13 +71,12 @@ public class SimpleEvalHierarchyProviderImpl extends HibernateGeneralGenericDao 
     * @return a {@link EvalHierarchyNode} object or null if none found
     */
    public EvalHierarchyNode getNodeById(String nodeId) {
-          log.debug("getNodeById("+nodeId+")");
-          EvalHierarchyNode node = null;
- 
+          LOG.debug("getNodeById("+nodeId+")");
+          EvalHierarchyNode node;
+
           HierarchyNode hNode = hierarchyService.getNodeById(nodeId);
           node = makeEvalNode(hNode);
-	  
-	  return node;
+          return node;
    }
 
    /**
@@ -131,7 +90,7 @@ public class SimpleEvalHierarchyProviderImpl extends HibernateGeneralGenericDao 
           if (nodeIds == null) {
             throw new IllegalArgumentException("nodeIds cannot br null");
           }
-          Set<EvalHierarchyNode> s = new HashSet<EvalHierarchyNode>();
+          Set<EvalHierarchyNode> s = new HashSet<>();
           Map<String, HierarchyNode> nodes = hierarchyService.getNodesByIds(nodeIds);
           for (HierarchyNode node : nodes.values()) {
               EvalHierarchyNode eNode = makeEvalNode(node);
@@ -155,7 +114,7 @@ public class SimpleEvalHierarchyProviderImpl extends HibernateGeneralGenericDao 
     * empty set if no children found
     */
    public Set<EvalHierarchyNode> getChildNodes(String nodeId, boolean directOnly) {
-     Set<EvalHierarchyNode> eNodes = new HashSet<EvalHierarchyNode>();
+     Set<EvalHierarchyNode> eNodes = new HashSet<>();
      Set<HierarchyNode> nodes = hierarchyService.getChildNodes(nodeId, directOnly);
      for (HierarchyNode node : nodes) {
          EvalHierarchyNode eNode = makeEvalNode(node);
@@ -163,7 +122,7 @@ public class SimpleEvalHierarchyProviderImpl extends HibernateGeneralGenericDao 
              eNodes.add( eNode );
          }
      }
-     return eNodes;   
+     return eNodes;
    }
 
 
@@ -177,7 +136,7 @@ public class SimpleEvalHierarchyProviderImpl extends HibernateGeneralGenericDao 
     * @return a set of userIds (not username/eid)
     */
    public Set<String> getUserIdsForNodesPerm(String[] nodeIds, String hierarchyPermConstant) {
-     Set<String> s = null;
+     Set<String> s;
      s = hierarchyService.getUserIdsForNodesPerm(nodeIds, hierarchyPermConstant);
      return s;
    }
@@ -193,7 +152,7 @@ public class SimpleEvalHierarchyProviderImpl extends HibernateGeneralGenericDao 
     * @return a Set of {@link EvalHierarchyNode} objects
     */
    public Set<EvalHierarchyNode> getNodesForUserPerm(String userId, String hierarchyPermConstant) {
-       Set<EvalHierarchyNode> evalNodes = new HashSet<EvalHierarchyNode>();
+       Set<EvalHierarchyNode> evalNodes = new HashSet<>();
        Set<HierarchyNode> nodes = hierarchyService.getNodesForUserPerm(userId, hierarchyPermConstant);
        if (nodes != null && nodes.size() > 0) {
            for (HierarchyNode hierarchyNode : nodes) {
@@ -213,9 +172,7 @@ public class SimpleEvalHierarchyProviderImpl extends HibernateGeneralGenericDao 
     * @return true if the user has this permission, false otherwise
     */
    public boolean checkUserNodePerm(String userId, String nodeId, String hierarchyPermConstant) {
-        boolean allowed = false;
-        allowed = hierarchyService.checkUserNodePerm(userId, nodeId, hierarchyPermConstant);
-        return allowed;
+        return hierarchyService.checkUserNodePerm(userId, nodeId, hierarchyPermConstant);
    }
 
 
@@ -228,7 +185,7 @@ public class SimpleEvalHierarchyProviderImpl extends HibernateGeneralGenericDao 
     * @return a List of {@link EvalHierarchyNode} objects (ordered from root to evalgroup)
     */
    public List<EvalHierarchyNode> getNodesAboveEvalGroup(String evalGroupId) {
-        List<EvalHierarchyNode> l = new ArrayList<EvalHierarchyNode>();
+        List<EvalHierarchyNode> l = new ArrayList<>();
         String nodeId = getNodeIdForEvalGroup(evalGroupId);
         if (nodeId != null) {
              HierarchyNode currentNode = hierarchyService.getNodeById(nodeId);
@@ -248,7 +205,7 @@ public class SimpleEvalHierarchyProviderImpl extends HibernateGeneralGenericDao 
        if (nodeId != null) {
             HierarchyNode n =  hierarchyService.getNodeById(nodeId);
             if(n != null){
-            	return makeEvalNode(n);
+                return makeEvalNode(n);
             }
        }
         return null;
@@ -268,13 +225,11 @@ public class SimpleEvalHierarchyProviderImpl extends HibernateGeneralGenericDao 
         if (nodeId == null || nodeId.equals("")) {
             throw new IllegalArgumentException("nodeId cannot be null or blank");
         }
-        Set<String> s = new HashSet<String>();
+        Set<String> s = new HashSet<>();
         EvalGroupNodes egn = getEvalGroupNodeByNodeId(nodeId);
         if (egn != null) {
              String[] evalGroups = egn.getEvalGroups();
-             for (int i = 0; i < evalGroups.length; i++) {
-                    s.add(evalGroups[i]);
-             }
+             s.addAll( Arrays.asList( evalGroups ) );
         }
         return s;
    }
@@ -290,22 +245,20 @@ public class SimpleEvalHierarchyProviderImpl extends HibernateGeneralGenericDao 
     * @return a Map of nodeId -> a set of eval group ids representing the eval groups beneath that node
     */
    public Map<String, Set<String>> getEvalGroupsForNodes(String[] nodeIds) {
-	   return getEvalGroupsForNodes(nodeIds, -1, null);
+       return getEvalGroupsForNodes(nodeIds, -1, null);
    }
    
    public Map<String, Set<String>> getEvalGroupsForNodes(String[] nodeIds, int filterLevel, String filter) {
         if (nodeIds == null) {
             throw new IllegalArgumentException("nodeIds cannot be null");
         }
-        Map<String, Set<String>> m = new HashMap<String, Set<String>>();
+        Map<String, Set<String>> m = new HashMap<>();
         if (nodeIds.length > 0) {
              List<EvalGroupNodes> l = getEvalGroupNodesByNodeId(nodeIds, filterLevel, filter);
              for (EvalGroupNodes egn : l) {
-                 Set<String> s = new HashSet<String>();
+                 Set<String> s = new HashSet<>();
                  String[] evalGroups = egn.getEvalGroups();
-                 for (int i = 0; i < evalGroups.length; i++) {
-                        s.add(evalGroups[i]);
-                 }
+                 s.addAll( Arrays.asList( evalGroups ) );
                  m.put(egn.getNodeId(), s);
               }
         }
@@ -318,15 +271,14 @@ public class SimpleEvalHierarchyProviderImpl extends HibernateGeneralGenericDao 
     * @return a map of nodeId -> number of eval groups
     */
    public Map<String, Integer> countEvalGroupsForNodes(String[] nodeIds) {
-        Map<String, Integer> m = new HashMap<String, Integer>();
-        for (int i = 0; i < nodeIds.length; i++) {
-             m.put(nodeIds[i], 0);
+        Map<String, Integer> m = new HashMap<>();
+        for( String nodeId : nodeIds ) {
+             m.put( nodeId, 0 );
         }
-    
+
         List<EvalGroupNodes> l = getEvalGroupNodesByNodeId(nodeIds, -1, null);
-        for (Iterator<EvalGroupNodes> iter = l.iterator(); iter.hasNext();) {
-            EvalGroupNodes egn = (EvalGroupNodes) iter.next();
-            m.put(egn.getNodeId(), egn.getEvalGroups().length);
+        for( EvalGroupNodes egn : l ) {
+             m.put(egn.getNodeId(), egn.getEvalGroups().length);
         }
         return m;
    }
@@ -353,82 +305,64 @@ public class SimpleEvalHierarchyProviderImpl extends HibernateGeneralGenericDao 
     }
 
     private List<EvalGroupNodes> getEvalGroupNodesByNodeId(String[] nodeIds, int filterLevel, String filter) {
-        /* List<EvalGroupNodes> l = findBySearch(EvalGroupNodes.class, new Search(
-                new Restriction("nodeId", nodeIds),
-                new Order("id")
-        ) ); */
-    	/*
-    	 *     	final String hql = "select egn from EvalGroupNodes egn where egn.nodeId in (:nodeIds)";
-        Object[] params = new Object[] {nodeIds};
-        HibernateCallback hcb = new HibernateCallback() {
-			
-			public Object doInHibernate(Session arg0) throws HibernateException,
-					SQLException {
-				Query q = arg0.createQuery(hql);
-	              q.setParameterList("nodeIds", nodeIds);
-	              return q.list();
-			}
-		};
-		return (List<EvalGroupNodes>) getHibernateTemplate().execute(hcb);
-    	 */
-       List<EvalGroupNodes> l = new ArrayList<EvalGroupNodes>();
+       List<EvalGroupNodes> l = new ArrayList<>();
        for (String nodeId : nodeIds) {
-         List<String> childIds = new ArrayList<String>();
-         Map<String, HierarchyNode> nodeCache = new HashMap<String, HierarchyNode>();
+         List<String> childIds = new ArrayList<>();
+         Map<String, HierarchyNode> nodeCache = new HashMap<>();
          for (HierarchyNode child : hierarchyService.getChildNodes(nodeId, true)) {
            if(child != null && child.title != null && child.title.startsWith("/site/")) {
-        	   //filter nodes based on filter
-        	   if(filterLevel > -1 && filter != null && !"".equals(filter)){
-        		   int nodeLevel = child.parentNodeIds.size();
-        		   String title = null;
-        		   if(nodeLevel == filterLevel){
-        			   //this node is on the same level as the filter, check it's title against the filter
-        			   title = child.description;
-        		   }else if(nodeLevel > filterLevel){
-        			   //this node is below the filter level, we need to find it's parent at the filter 
-        			   //level and check it's title against the filter
-        			   Set<String> parentNodeIds = new HashSet<String>();
-        			   //first try to get the parents from the cache
-        			   for(String parent : child.parentNodeIds){
-        				   if(nodeCache.containsKey(parent)){
-        					   nodeLevel = nodeCache.get(parent).parentNodeIds.size();
-        					   if(nodeLevel == filterLevel){
-        						   //we found the one we wanted in the cache, break out and
-        						   title = nodeCache.get(parent).title;
-        						   break;
-        					   }
-        					   //else ignore, b/c it's not the right level anyways
-        				   }else{
-        					   //we'll look this up later in bulk
-        					   parentNodeIds.add(parent);
-        				   }
-        			   }
-        			   if(title == null){
-        				   //title is still null, whihc means we didn't find it in the cache
-        				   //lookup parents:
-        				   Map<String, HierarchyNode> parentNodes = hierarchyService.getNodesByIds(parentNodeIds.toArray(new String[]{}));
-        				   for(HierarchyNode nParent : parentNodes.values()){
-        					   nodeLevel = nParent.parentNodeIds.size();
-        					   if(nodeLevel == filterLevel){
-        						   //we found the one we wanted, save the title
-        						   title = nParent.title;
-        					   }
-        					   //save this in the cache so we don't have to look it up again
-        					   nodeCache.put(nParent.id, nParent);
-        				   }
-        			   }	
-        		   }
-        		   //ok, we should have the correct title for the correct node level for this node (or parent)
-        		   //unless the node was above the filter... then we'll deal with that when we get the node's
-        		   //children
-        		   if(title != null && title.toLowerCase().equals(filter.toLowerCase())){
-        			   //this node didn't match the filter, remove it
-        			   childIds.add(child.title);
-        		   }
+                //filter nodes based on filter
+                if(filterLevel > -1 && filter != null && !"".equals(filter)){
+                    int nodeLevel = child.parentNodeIds.size();
+                    String title = null;
+                    if(nodeLevel == filterLevel){
+                        //this node is on the same level as the filter, check it's title against the filter
+                        title = child.description;
+                    }else if(nodeLevel > filterLevel){
+                        //this node is below the filter level, we need to find it's parent at the filter 
+                        //level and check it's title against the filter
+                        Set<String> parentNodeIds = new HashSet<>();
+                        //first try to get the parents from the cache
+                        for(String parent : child.parentNodeIds){
+                            if(nodeCache.containsKey(parent)){
+                                nodeLevel = nodeCache.get(parent).parentNodeIds.size();
+                                if(nodeLevel == filterLevel){
+                                    //we found the one we wanted in the cache, break out and
+                                    title = nodeCache.get(parent).title;
+                                    break;
+                                }
+                                //else ignore, b/c it's not the right level anyways
+                            }else{
+                                //we'll look this up later in bulk
+                                parentNodeIds.add(parent);
+                            }
+                        }
+                        if(title == null){
+                            //title is still null, whihc means we didn't find it in the cache
+                            //lookup parents:
+                            Map<String, HierarchyNode> parentNodes = hierarchyService.getNodesByIds(parentNodeIds.toArray(new String[]{}));
+                            for(HierarchyNode nParent : parentNodes.values()){
+                                nodeLevel = nParent.parentNodeIds.size();
+                                if(nodeLevel == filterLevel){
+                                    //we found the one we wanted, save the title
+                                    title = nParent.title;
+                                }
+                                //save this in the cache so we don't have to look it up again
+                                nodeCache.put(nParent.id, nParent);
+                            }
+                        }
+                    }
+                    //ok, we should have the correct title for the correct node level for this node (or parent)
+                    //unless the node was above the filter... then we'll deal with that when we get the node's
+                    //children
+                    if(title != null && title.toLowerCase().equals(filter.toLowerCase())){
+                        //this node didn't match the filter, remove it
+                        childIds.add(child.title);
+                    }
 
-               }else{
-            	   //no filter, just add the child
-            	   childIds.add(child.title);
+                }else{
+                    //no filter, just add the child
+                    childIds.add(child.title);
                }
            }
          }
@@ -439,32 +373,30 @@ public class SimpleEvalHierarchyProviderImpl extends HibernateGeneralGenericDao 
 
     @SuppressWarnings("unchecked")
     public String getNodeIdForEvalGroup(final String evalGroupId) {
-    	if(evalGroupId.startsWith("/site/")){
-    		final String sql = "Select ID From HIERARCHY_NODE_META where hierarchyId = ? and title = ? and isDisabled = 0";
-    		List<Object> l = (List) getHibernateTemplate().execute(new HibernateCallback() {
-				
-				public Object doInHibernate(Session session) throws HibernateException,
-						SQLException {
-					SQLQuery sq =session.createSQLQuery(sql);
-					sq.setParameter(0, "delegatedAccessHierarchyId");
-					sq.setParameter(1, evalGroupId);
-					return sq.list();
-				}
-			});
-    		if (l.isEmpty()) {
-    			return null;
-    		}
-    		return l.get(0).toString();
-    	}else{
-    		String hql = "select egn.nodeId from EvalGroupNodes egn join egn.evalGroups egrps where egrps.id = ? order by egn.nodeId";
-    		String[] params = new String[] {evalGroupId};
-    		List<String> l = getHibernateTemplate().find(hql, params);
-    		if (l.isEmpty()) {
-    			return null;
-    		}
-    		return (String) l.get(0);
-    	}
+        if(evalGroupId.startsWith("/site/")){
+            final String sql = "Select ID From HIERARCHY_NODE_META where hierarchyId = ? and title = ? and isDisabled = 0";
+            List<Object> l = (List) getHibernateTemplate().execute(new HibernateCallback() {
+
+                public Object doInHibernate(Session session) throws HibernateException,
+                        SQLException {
+                    SQLQuery sq =session.createSQLQuery(sql);
+                    sq.setParameter(0, "delegatedAccessHierarchyId");
+                    sq.setParameter(1, evalGroupId);
+                    return sq.list();
+                }
+            });
+            if (l.isEmpty()) {
+                return null;
+            }
+            return l.get(0).toString();
+        }else{
+            String hql = "select egn.nodeId from EvalGroupNodes egn join egn.evalGroups egrps where egrps.id = ? order by egn.nodeId";
+            String[] params = new String[] {evalGroupId};
+            List<String> l = (List<String>) getHibernateTemplate().find(hql, (Object[]) params);
+            if (l.isEmpty()) {
+                return null;
+            }
+            return (String) l.get(0);
+        }
     }
-
-
 }
