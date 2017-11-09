@@ -6,19 +6,23 @@
     <parent>
         <artifactId>evalgroup-base</artifactId>
         <groupId>org.sakaiproject.evaluation</groupId>
-        <version>12-SNAPSHOT</version><!--eval.version-->
+        <version>13-SNAPSHOT</version><!--eval.version-->
     </parent>
     <name>Sakai Evaluation Provider Impl</name>
     <groupId>org.sakaiproject.evaluation</groupId>
     <artifactId>sakai-evalgroup-providers-impl</artifactId>
-    <version>12-SNAPSHOT</version><!--eval.version-->
+    <version>13-SNAPSHOT</version><!--eval.version-->
     <organization>
         <name>Sakai Project</name>
         <url>http://www.sakaiproject.org/</url>
     </organization>
     <inceptionYear>2003</inceptionYear>
     <!-- the logic should be deployed as a jar and included in the pack, not to shared -->
-    <packaging>jar</packaging>
+    <packaging>sakai-component</packaging>
+
+    <properties>
+        <deploy.target>components</deploy.target>
+    </properties>
 
     <dependencies>
 
