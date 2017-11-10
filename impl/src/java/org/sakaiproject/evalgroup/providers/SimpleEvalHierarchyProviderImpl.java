@@ -25,7 +25,7 @@ import org.sakaiproject.genericdao.hibernate.HibernateGeneralGenericDao;
 import org.sakaiproject.hierarchy.HierarchyService;
 import org.sakaiproject.hierarchy.model.HierarchyNode;
 import org.sakaiproject.hierarchy.utils.HierarchyUtils;
-import org.springframework.orm.hibernate3.HibernateCallback;
+import org.springframework.orm.hibernate4.HibernateCallback;
 
 public class SimpleEvalHierarchyProviderImpl extends HibernateGeneralGenericDao implements EvalHierarchyProvider {
 
@@ -377,8 +377,7 @@ public class SimpleEvalHierarchyProviderImpl extends HibernateGeneralGenericDao 
             final String sql = "Select ID From HIERARCHY_NODE_META where hierarchyId = ? and title = ? and isDisabled = 0";
             List<Object> l = (List) getHibernateTemplate().execute(new HibernateCallback() {
 
-                public Object doInHibernate(Session session) throws HibernateException,
-                        SQLException {
+                public Object doInHibernate(Session session) throws HibernateException {
                     SQLQuery sq =session.createSQLQuery(sql);
                     sq.setParameter(0, "delegatedAccessHierarchyId");
                     sq.setParameter(1, evalGroupId);
