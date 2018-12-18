@@ -228,8 +228,8 @@ public class SimpleEvalHierarchyProviderImpl extends HibernateGeneralGenericDao 
         Set<String> s = new HashSet<>();
         EvalGroupNodes egn = getEvalGroupNodeByNodeId(nodeId);
         if (egn != null) {
-             String[] evalGroups = egn.getEvalGroups();
-             s.addAll( Arrays.asList( evalGroups ) );
+             List<String> evalGroups = egn.getEvalGroups();
+             s.addAll( evalGroups );
         }
         return s;
    }
@@ -257,8 +257,8 @@ public class SimpleEvalHierarchyProviderImpl extends HibernateGeneralGenericDao 
              List<EvalGroupNodes> l = getEvalGroupNodesByNodeId(nodeIds, filterLevel, filter);
              for (EvalGroupNodes egn : l) {
                  Set<String> s = new HashSet<>();
-                 String[] evalGroups = egn.getEvalGroups();
-                 s.addAll( Arrays.asList( evalGroups ) );
+                 List<String> evalGroups = egn.getEvalGroups();
+                 s.addAll( evalGroups );
                  m.put(egn.getNodeId(), s);
               }
         }
@@ -278,7 +278,7 @@ public class SimpleEvalHierarchyProviderImpl extends HibernateGeneralGenericDao 
 
         List<EvalGroupNodes> l = getEvalGroupNodesByNodeId(nodeIds, -1, null);
         for( EvalGroupNodes egn : l ) {
-             m.put(egn.getNodeId(), egn.getEvalGroups().length);
+             m.put(egn.getNodeId(), egn.getEvalGroups().size());
         }
         return m;
    }
@@ -366,7 +366,7 @@ public class SimpleEvalHierarchyProviderImpl extends HibernateGeneralGenericDao 
                }
            }
          }
-         l.add(new EvalGroupNodes(null, nodeId, childIds.toArray(new String[childIds.size()])));
+         l.add(new EvalGroupNodes(null, nodeId, childIds));
        }
        return l;
     }
