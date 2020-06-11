@@ -33,11 +33,6 @@
             <version>${project.version}</version>
         </dependency>
         <dependency>
-            <groupId>org.sakaiproject.evaluation</groupId>
-             <artifactId>sakai-evaluation-impl</artifactId>
-             <version>${project.version}</version>
-        </dependency>
-        <dependency>
             <groupId>org.sakaiproject.hierarchy</groupId>
             <artifactId>hierarchy-api</artifactId>
             <scope>provided</scope>
