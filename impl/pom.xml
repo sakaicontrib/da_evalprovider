@@ -6,12 +6,12 @@
     <parent>
         <artifactId>evalgroup-base</artifactId>
         <groupId>org.sakaiproject.evaluation</groupId>
-        <version>20-SNAPSHOT</version><!--eval.version-->
+        <version>21-SNAPSHOT</version><!--eval.version-->
     </parent>
     <name>Sakai Evaluation Provider Impl</name>
     <groupId>org.sakaiproject.evaluation</groupId>
     <artifactId>sakai-evalgroup-providers-impl</artifactId>
-    <version>20-SNAPSHOT</version><!--eval.version-->
+    <version>21-SNAPSHOT</version><!--eval.version-->
     <organization>
         <name>Sakai Project</name>
         <url>http://www.sakaiproject.org/</url>

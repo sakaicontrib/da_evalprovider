@@ -4,13 +4,13 @@
   <parent>
     <artifactId>master</artifactId>
     <groupId>org.sakaiproject</groupId>
-    <version>20-SNAPSHOT</version><!--eval.version-->
+    <version>21-SNAPSHOT</version><!--eval.version-->
     <relativePath>../pom.xml</relativePath>
   </parent>
   <name>Sakai Simple EvalGroup Provider Project</name>
   <groupId>org.sakaiproject.evaluation</groupId>
   <artifactId>evalgroup-base</artifactId>
-  <version>20-SNAPSHOT</version>
+  <version>21-SNAPSHOT</version>
   <packaging>pom</packaging>
   <profiles>
     <profile>

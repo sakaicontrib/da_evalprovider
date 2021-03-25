@@ -25,7 +25,7 @@ import org.sakaiproject.genericdao.hibernate.HibernateGeneralGenericDao;
 import org.sakaiproject.hierarchy.HierarchyService;
 import org.sakaiproject.hierarchy.model.HierarchyNode;
 import org.sakaiproject.hierarchy.utils.HierarchyUtils;
-import org.springframework.orm.hibernate4.HibernateCallback;
+import org.springframework.orm.hibernate5.HibernateCallback;
 
 public class SimpleEvalHierarchyProviderImpl extends HibernateGeneralGenericDao implements EvalHierarchyProvider {
 
