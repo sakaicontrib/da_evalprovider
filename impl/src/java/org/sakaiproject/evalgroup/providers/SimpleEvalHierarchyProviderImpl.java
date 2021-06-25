@@ -374,24 +374,20 @@ public class SimpleEvalHierarchyProviderImpl extends HibernateGeneralGenericDao 
     @SuppressWarnings("unchecked")
     public String getNodeIdForEvalGroup(final String evalGroupId) {
         if(evalGroupId.startsWith("/site/")){
-            final String sql = "Select ID From HIERARCHY_NODE_META where hierarchyId = ? and title = ? and isDisabled = 0";
-            List<Object> l = (List) getHibernateTemplate().execute(new HibernateCallback() {
-
-                public Object doInHibernate(Session session) throws HibernateException {
-                    SQLQuery sq =session.createSQLQuery(sql);
-                    sq.setParameter(0, "delegatedAccessHierarchyId");
-                    sq.setParameter(1, evalGroupId);
-                    return sq.list();
-                }
-            });
+            List<Object> l = getHibernateTemplate().execute(session -> session
+                .createSQLQuery("Select ID From HIERARCHY_NODE_META where hierarchyId = :hid and title = :title and isDisabled = 0")
+                .setParameter("hid", "delegatedAccessHierarchyId")
+                .setParameter("title", evalGroupId)
+                .list());
             if (l.isEmpty()) {
                 return null;
             }
             return l.get(0).toString();
         }else{
-            String hql = "select egn.nodeId from EvalGroupNodes egn join egn.evalGroups egrps where egrps.id = ? order by egn.nodeId";
-            String[] params = new String[] {evalGroupId};
-            List<String> l = (List<String>) getHibernateTemplate().find(hql, (Object[]) params);
+            List<String> l = getHibernateTemplate().execute(session -> session
+                .createQuery("select egn.nodeId from EvalGroupNodes egn join egn.evalGroups egrps where egrps.id = :id order by egn.nodeId")
+                .setParameter("id", evalGroupId)
+                .list());
             if (l.isEmpty()) {
                 return null;
             }
