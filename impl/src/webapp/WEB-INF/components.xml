@@ -15,8 +15,7 @@
     <!-- /bean -->
 
     <bean id="org.sakaiproject.evaluation.providers.EvalHierarchyProvider"      
-     class="org.sakaiproject.evalgroup.providers.SimpleEvalHierarchyProviderImpl"
-        init-method="init">
+     class="org.sakaiproject.evalgroup.providers.SimpleEvalHierarchyProviderImpl">
            <property name="hierarchyService" ref="org.sakaiproject.hierarchy.HierarchyService" />
 	   <property name="externalLogic" ref="org.sakaiproject.evaluation.logic.externals.EvalExternalLogic" />
 	   <property name="sessionFactory" 
@@ -24,8 +23,7 @@
     </bean>
     <!--
     <bean id="org.sakaiproject.evaluation.providers.EvalGroupsProvider"
-         class="org.sakaiproject.evalgroup.providers.SimpleEvalGroupProviderImpl"
-         init-method="init">
+         class="org.sakaiproject.evalgroup.providers.SimpleEvalGroupProviderImpl">
             <property name="dataSource" ref="javax.sql.DataSource" />
 			<property name="externalLogic" ref="org.sakaiproject.evaluation.logic.externals.EvalExternalLogic" />
     </bean>

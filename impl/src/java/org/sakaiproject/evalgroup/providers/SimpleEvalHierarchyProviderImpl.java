@@ -1,20 +1,13 @@
 package org.sakaiproject.evalgroup.providers;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-import org.hibernate.HibernateException;
-import org.hibernate.SQLQuery;
-import org.hibernate.Session;
-
-import java.sql.SQLException;
 import java.util.List;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Map;
 import java.util.Set;
 import java.util.HashSet;
 import java.util.HashMap;
 
+import lombok.Setter;
 import org.sakaiproject.evaluation.providers.EvalHierarchyProvider;
 import org.sakaiproject.evaluation.constant.EvalConstants;
 import org.sakaiproject.evaluation.logic.model.EvalHierarchyNode;
@@ -25,31 +18,14 @@ import org.sakaiproject.genericdao.hibernate.HibernateGeneralGenericDao;
 import org.sakaiproject.hierarchy.HierarchyService;
 import org.sakaiproject.hierarchy.model.HierarchyNode;
 import org.sakaiproject.hierarchy.utils.HierarchyUtils;
-import org.springframework.orm.hibernate5.HibernateCallback;
 
+import lombok.extern.slf4j.Slf4j;
+
+@Setter
+@Slf4j
 public class SimpleEvalHierarchyProviderImpl extends HibernateGeneralGenericDao implements EvalHierarchyProvider {
-
-  private static final Log LOG = LogFactory.getLog(SimpleEvalHierarchyProviderImpl.class);
-
-  protected EvalExternalLogic externalLogic;
-  public void setExternalLogic(EvalExternalLogic externalLogic) {
-    this.externalLogic = externalLogic;
-  }
-
-  private HierarchyService hierarchyService;
-  public void setHierarchyService(HierarchyService hierarchyService) {
-    this.hierarchyService = hierarchyService;
-  }
-
-  protected static String PERM_ASSIGN_EVALUATION_COPY;
-  protected static String PERM_TA_ROLE_COPY;
-
-  /**
-   * Initialize this provider
-   */
-  public void init() {
-    LOG.info("init");
-  }
+    protected EvalExternalLogic externalLogic;
+    private HierarchyService hierarchyService;
 
   /**
     * Get the hierarchy root node of the eval hierarchy
@@ -71,7 +47,7 @@ public class SimpleEvalHierarchyProviderImpl extends HibernateGeneralGenericDao 
     * @return a {@link EvalHierarchyNode} object or null if none found
     */
    public EvalHierarchyNode getNodeById(String nodeId) {
-          LOG.debug("getNodeById("+nodeId+")");
+          log.debug("getNodeById({})", nodeId);
           EvalHierarchyNode node;
 
           HierarchyNode hNode = hierarchyService.getNodeById(nodeId);
@@ -94,9 +70,7 @@ public class SimpleEvalHierarchyProviderImpl extends HibernateGeneralGenericDao 
           Map<String, HierarchyNode> nodes = hierarchyService.getNodesByIds(nodeIds);
           for (HierarchyNode node : nodes.values()) {
               EvalHierarchyNode eNode = makeEvalNode(node);
-              if (eNode != null) {
-                  s.add( eNode );
-              }
+              s.add(eNode);
           }
           return s;
    }
@@ -118,7 +92,7 @@ public class SimpleEvalHierarchyProviderImpl extends HibernateGeneralGenericDao 
      Set<HierarchyNode> nodes = hierarchyService.getChildNodes(nodeId, directOnly);
      for (HierarchyNode node : nodes) {
          EvalHierarchyNode eNode = makeEvalNode(node);
-         if (eNode != null && (node.title == null || !node.title.startsWith("/site/"))) {
+         if (node.title == null || !node.title.startsWith("/site/")) {
              eNodes.add( eNode );
          }
      }
@@ -154,7 +128,7 @@ public class SimpleEvalHierarchyProviderImpl extends HibernateGeneralGenericDao 
    public Set<EvalHierarchyNode> getNodesForUserPerm(String userId, String hierarchyPermConstant) {
        Set<EvalHierarchyNode> evalNodes = new HashSet<>();
        Set<HierarchyNode> nodes = hierarchyService.getNodesForUserPerm(userId, hierarchyPermConstant);
-       if (nodes != null && nodes.size() > 0) {
+       if (nodes != null && !nodes.isEmpty()) {
            for (HierarchyNode hierarchyNode : nodes) {
                 evalNodes.add( makeEvalNode(hierarchyNode) );
            }
@@ -222,7 +196,7 @@ public class SimpleEvalHierarchyProviderImpl extends HibernateGeneralGenericDao 
     * @return a Set of eval group ids representing the eval groups beneath this hierarchy node
     */
    public Set<String> getEvalGroupsForNode(String nodeId) {
-        if (nodeId == null || nodeId.equals("")) {
+        if (nodeId == null || nodeId.isEmpty()) {
             throw new IllegalArgumentException("nodeId cannot be null or blank");
         }
         Set<String> s = new HashSet<>();
@@ -256,9 +230,8 @@ public class SimpleEvalHierarchyProviderImpl extends HibernateGeneralGenericDao 
         if (nodeIds.length > 0) {
              List<EvalGroupNodes> l = getEvalGroupNodesByNodeId(nodeIds, filterLevel, filter);
              for (EvalGroupNodes egn : l) {
-                 Set<String> s = new HashSet<>();
                  List<String> evalGroups = egn.getEvalGroups();
-                 s.addAll( evalGroups );
+                 Set<String> s = new HashSet<>(evalGroups);
                  m.put(egn.getNodeId(), s);
               }
         }
@@ -299,7 +272,7 @@ public class SimpleEvalHierarchyProviderImpl extends HibernateGeneralGenericDao 
         List<EvalGroupNodes> l = getEvalGroupNodesByNodeId(new String[] {nodeId}, -1, null);
         EvalGroupNodes egn = null;
         if (!l.isEmpty()) {
-            egn = (EvalGroupNodes) l.get(0);
+            egn = l.get(0);
         }
         return egn;
     }
@@ -312,7 +285,7 @@ public class SimpleEvalHierarchyProviderImpl extends HibernateGeneralGenericDao 
          for (HierarchyNode child : hierarchyService.getChildNodes(nodeId, true)) {
            if(child != null && child.title != null && child.title.startsWith("/site/")) {
                 //filter nodes based on filter
-                if(filterLevel > -1 && filter != null && !"".equals(filter)){
+                if(filterLevel > -1 && filter != null && !filter.isEmpty()){
                     int nodeLevel = child.parentNodeIds.size();
                     String title = null;
                     if(nodeLevel == filterLevel){
@@ -355,7 +328,7 @@ public class SimpleEvalHierarchyProviderImpl extends HibernateGeneralGenericDao 
                     //ok, we should have the correct title for the correct node level for this node (or parent)
                     //unless the node was above the filter... then we'll deal with that when we get the node's
                     //children
-                    if(title != null && title.toLowerCase().equals(filter.toLowerCase())){
+                    if(title != null && title.equalsIgnoreCase(filter)){
                         //this node didn't match the filter, remove it
                         childIds.add(child.title);
                     }

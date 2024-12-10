@@ -33,28 +33,24 @@ import java.sql.Connection;
 import java.sql.Statement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+
+import lombok.Setter;
+import lombok.extern.slf4j.Slf4j;
 import org.sakaiproject.evaluation.constant.EvalConstants;
 import org.sakaiproject.evaluation.logic.externals.EvalExternalLogic;
 import org.sakaiproject.evaluation.logic.model.EvalGroup;
 import org.sakaiproject.evaluation.providers.EvalGroupsProvider;
 
+@Setter
+@Slf4j
 public class SimpleEvalGroupProviderImpl implements EvalGroupsProvider 
 {
-	private static final Log LOG = LogFactory.getLog(SimpleEvalGroupProviderImpl.class);
 
 	protected EvalExternalLogic externalLogic;
-	public void setExternalLogic(EvalExternalLogic externalLogic) {
-		this.externalLogic = externalLogic;
-	}
 
-	private DataSource dataSource;
-	public void setDataSource(DataSource dataSource) {
-		this.dataSource = dataSource;
-	}
+    private DataSource dataSource;
 
-	protected static String PERM_ASSIGN_EVALUATION_COPY;
+    protected static String PERM_ASSIGN_EVALUATION_COPY;
 	protected static String PERM_TA_ROLE_COPY;
 
 	/**
@@ -62,7 +58,7 @@ public class SimpleEvalGroupProviderImpl implements EvalGroupsProvider
 	 */
 	public void init() 
 	{
-		LOG.info("init");
+		log.info("init");
 		try 
 		{
 			Field field = SimpleEvalGroupProviderImpl.class.getField("PERM_ASSIGN_EVALUATION");
@@ -86,24 +82,24 @@ public class SimpleEvalGroupProviderImpl implements EvalGroupsProvider
 	/* (non-Javadoc)
 	 * @see org.sakaiproject.evaluation.providers.EvalGroupsProvider#countEvalGroupsForUser(java.lang.String, java.lang.String)
 	 */
-	public int countEvalGroupsForUser(String userId, String permission) 
-	{
-		Connection conn;
-		ResultSet result;
-		int count = 0;
-		try {
-			conn = dataSource.getConnection();
-			String userEid = this.getUserEid(userId);
-			Statement statement = conn.createStatement();
-			result = statement.executeQuery("SELECT count(*) as total from GRP_PROVIDER_group_membership where user_eid = '"+userEid+"';");
-			result.first();	
+public int countEvalGroupsForUser(String userId, String permission)
+{
+	int count = 0;
+	String userEid = this.getUserEid(userId);
+	String query = "SELECT count(*) as total from GRP_PROVIDER_group_membership where user_eid = '" + userEid + "';";
+
+	try (Connection conn = dataSource.getConnection();
+	     Statement statement = conn.createStatement();
+	     ResultSet result = statement.executeQuery(query)) {
+
+		if (result.next()) {
 			count = result.getInt("total");
-			conn.close();
-		} catch (SQLException ex) {
-			System.err.println("SQLException: " + ex.getMessage());
 		}
-		return count;
+	} catch (SQLException ex) {
+        log.warn("SQLException: {}", ex.getMessage());
 	}
+	return count;
+}
 
 	/* (non-Javadoc)
 	 * @see org.sakaiproject.evaluation.providers.EvalGroupsProvider#countUserIdsForEvalGroups(java.lang.String[], java.lang.String)
@@ -159,17 +155,14 @@ public class SimpleEvalGroupProviderImpl implements EvalGroupsProvider
 	 */
 	public EvalGroup getGroupByGroupId(String groupId) {
 		EvalGroup group = null;
-		Connection conn;
-		try {
-			conn = dataSource.getConnection();
-			Statement statement = conn.createStatement();
-			ResultSet result = statement.executeQuery("Select id from GRP_PROVIDER_groups where id = "+groupId+";");
-			if(result != null) {
+		try (Connection conn = dataSource.getConnection();
+			 Statement statement = conn.createStatement();
+			 ResultSet result = statement.executeQuery("Select id from GRP_PROVIDER_groups where id = " + groupId + ";")) {
+			if (result != null) {
 				group = this.makeEvalGroupObject(groupId);
 			}
-			conn.close();
 		} catch (SQLException ex) {
-			System.err.println("SQLException: " + ex.getMessage());
+			log.warn("SQLException getGroupByGroupId: " + ex.getMessage());
 		}
 		return group;
 	}
@@ -179,21 +172,19 @@ public class SimpleEvalGroupProviderImpl implements EvalGroupsProvider
 	 */
 	public Set<String> getUserIdsForEvalGroups(String[] groupIds, String permission) {
 		Set<String> userIds = new TreeSet<>();
-		Connection conn;
-		try {
-			conn = dataSource.getConnection();
-			Statement statement = conn.createStatement();
-			if(groupIds != null) {
-				for(String groupId : groupIds) {
-					ResultSet result = statement.executeQuery("Select user_eid from GRP_PROVIDER_group_membership where group_id = "+groupId+ ";");
-					while (result.next()) {
-						userIds.add(this.getUserId(result.getString("user_eid")));
+		try (Connection conn = dataSource.getConnection();
+			 Statement statement = conn.createStatement()) {
+			if (groupIds != null) {
+				for (String groupId : groupIds) {
+					try (ResultSet result = statement.executeQuery("Select user_eid from GRP_PROVIDER_group_membership where group_id = " + groupId + ";")) {
+						while (result.next()) {
+							userIds.add(this.getUserId(result.getString("user_eid")));
+						}
 					}
 				}
 			}
-			conn.close();
 		} catch (SQLException ex) {
-			System.err.println("SQLException: " + ex.getMessage());
+			log.warn("SQLException getUserIdsForEvalGroups: {}", ex.getMessage());
 		}
 		return userIds;
 	}
@@ -239,34 +230,23 @@ public class SimpleEvalGroupProviderImpl implements EvalGroupsProvider
 		return result;
 	}
 
-	/**
-	 * @param userId
-	 * @return
-	 */
 	protected boolean isUserAdmin(String userId)
 	{
 		//return this.externalLogic.isUserAdmin(userId);
 		return false;
 	}
-	
-	/**
-	 * @param groupId
-	 * @return
-	 */
+
 	protected EvalGroup makeEvalGroupObject(String groupId) 
 	{
-		Connection conn;
-		ResultSet result;
 		String title = "";
-		try {
-			conn = dataSource.getConnection();
-			Statement statement = conn.createStatement();
-			result = statement.executeQuery("Select * from GRP_PROVIDER_groups where id = "+groupId+";");
-			result.first();
-			title = result.getString("title");
-			conn.close();	
+		try (Connection conn = dataSource.getConnection();
+			 Statement statement = conn.createStatement();
+			 ResultSet result = statement.executeQuery("Select * from GRP_PROVIDER_groups where id = " + groupId + ";")) {
+			if (result.first()) {
+				title = result.getString("title");
+			}
 		} catch (SQLException ex) {
-			System.err.println("SQLException: " + ex.getMessage());
+			log.warn("SQLException makeEvalGroupObject: {}", ex.getMessage());
 		}
 		return new EvalGroup(groupId, title, EvalConstants.GROUP_TYPE_PROVIDED);
 	}
